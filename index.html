@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>2D CAR — Highway Racer</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#091321;color:#fff;font-family:system-ui,Arial;display:grid;place-items:center;min-height:100vh}
+main{width:min(960px,100vw);padding:12px}header{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:0 0 10px}
+h1{margin:0;font-size:clamp(22px,5vw,34px);letter-spacing:2px}small{color:#a9c0d8}
+.stats{display:flex;gap:14px;font-weight:700}.stat span{color:#55e6c1}
+.gamebox{position:relative;border:2px solid #344b65;border-radius:16px;overflow:hidden;box-shadow:0 16px 45px #0008;background:#162b3b}
+canvas{display:block;width:100%;height:auto;aspect-ratio:16/9;touch-action:none}
+.overlay{position:absolute;inset:0;display:grid;place-items:center;background:#06111dcc;text-align:center;padding:20px}
+.panel{max-width:440px}.panel h2{font-size:clamp(30px,7vw,52px);margin:0 0 8px;color:#55e6c1}.panel p{color:#d5e3ef;line-height:1.5}
+button{border:0;border-radius:12px;padding:12px 22px;background:#55e6c1;color:#06221e;font-weight:900;font-size:16px;cursor:pointer}
+.controls{display:flex;justify-content:center;gap:18px;margin:12px auto 4px}
+.controls button{width:90px;height:54px;font-size:24px;background:#20364c;color:white;border:1px solid #49627c}
+.hint{text-align:center;color:#9db1c7;font-size:13px;margin-top:8px}
+@media(min-width:700px){.controls{display:none}}
+</style></head>
+<body><main>
+<header><div><h1>🏁 2D CAR</h1><small>HIGHWAY RACER</small></div><div class="stats"><div class="stat">SCORE<br><span id="score">0</span></div><div class="stat">BEST<br><span id="best">0</span></div></div></header>
+<div class="gamebox"><canvas id="c" width="960" height="540"></canvas>
+<div class="overlay" id="overlay"><div class="panel"><h2>2D CAR</h2><p>Dodge traffic, collect coins and beat your best score.<br>Use ← → or A / D to steer.</p><button id="start">START RACING</button></div></div></div>
+<div class="controls"><button id="left">◀</button><button id="right">▶</button></div>
+<div class="hint">Desktop: Arrow keys / A-D &nbsp; • &nbsp; Mobile: use the steering buttons</div>
+</main>
+<script>
+(()=>{
+const c=document.getElementById('c'),x=c.getContext('2d'),W=960,H=540;
+const scoreEl=document.getElementById('score'),bestEl=document.getElementById('best'),overlay=document.getElementById('overlay');
+let running=false,score=0,best=+(localStorage.getItem('2dcar-best')||0),frame=0,speed=5,roadShift=0,traffic=[],coins=[],left=false,right=false;
+bestEl.textContent=best;
+const player={x:480,y:420,w:54,h:88};
+const lanes=[365,480,595];
+function reset(){score=0;frame=0;speed=5;roadShift=0;traffic=[];coins=[];player.x=480;scoreEl.textContent=0;}
+function rounded(a,b,w,h,r,col){x.fillStyle=col;x.beginPath();x.roundRect(a,b,w,h,r);x.fill();}
+function car(px,py,color,playerCar=false){
+ rounded(px-25,py-39,50,78,12,'#101820');rounded(px-27,py-42,54,84,12,color);
+ rounded(px-18,py-22,36,26,6,'#a9e7f4');rounded(px-18,py+10,36,18,5,'#243d50');
+ x.fillStyle='#fff3bf';x.fillRect(px-21,py-39,9,5);x.fillRect(px+12,py-39,9,5);
+ x.fillStyle='#ff4545';x.fillRect(px-21,py+34,9,5);x.fillRect(px+12,py+34,9,5);
+ if(playerCar){x.fillStyle='#d7f7ff';x.fillRect(px-4,py-39,8,4);}
+}
+function road(){
+ x.fillStyle='#17452f';x.fillRect(0,0,W,H);
+ // roadside trees
+ for(let y=-40+(roadShift%110);y<H;y+=110){for(let xx of [110,180,780,850]){
+ x.fillStyle='#0c3024';x.beginPath();x.arc(xx,y,24,0,7);x.fill();x.fillStyle='#28794c';x.beginPath();x.arc(xx-4,y-5,17,0,7);x.fill();}}
+ x.fillStyle='#343b46';x.fillRect(280,0,400,H);
+ x.fillStyle='#e7d58a';x.fillRect(278,0,5,H);x.fillRect(677,0,5,H);
+ x.strokeStyle='#f5f2dc';x.lineWidth=5;x.setLineDash([38,34]);x.lineDashOffset=-roadShift;
+ x.beginPath();x.moveTo(413,0);x.lineTo(413,H);x.moveTo(547,0);x.lineTo(547,H);x.stroke();x.setLineDash([]);
+ roadShift+=speed;
+}
+function spawn(){
+ if(frame%62===0){let lane=lanes[Math.floor(Math.random()*3)];traffic.push({x:lane,y:-70,color:['#ff5964','#ffc857','#8b7bff','#45c4e8'][Math.floor(Math.random()*4)]});}
+ if(frame%95===0){let lane=lanes[Math.floor(Math.random()*3)];coins.push({x:lane,y:-25});}
+}
+function update(){
+ if(!running)return;frame++;speed=Math.min(9,5+score/500);
+ if(left)player.x-=6;if(right)player.x+=6;player.x=Math.max(330,Math.min(630,player.x));
+ spawn();
+ traffic.forEach(t=>t.y+=speed+1.2);coins.forEach(o=>o.y+=speed);
+ traffic=traffic.filter(t=>t.y<H+100);coins=coins.filter(o=>o.y<H+30);
+ for(const t of traffic){if(Math.abs(t.x-player.x)<47&&Math.abs(t.y-player.y)<68){end();return;}}
+ coins=coins.filter(o=>{if(Math.abs(o.x-player.x)<38&&Math.abs(o.y-player.y)<55){score+=25;return false;}return true;});
+ if(frame%8===0)score+=1;scoreEl.textContent=score;
+}
+function draw(){
+ road();
+ // coins
+ for(const o of coins){x.fillStyle='#ffdb4d';x.shadowColor='#ffdb4d';x.shadowBlur=16;x.beginPath();x.arc(o.x,o.y,13,0,7);x.fill();x.shadowBlur=0;x.fillStyle='#805400';x.font='bold 15px Arial';x.textAlign='center';x.fillText('$',o.x,o.y+5);}
+ traffic.forEach(t=>car(t.x,t.y,t.color));car(player.x,player.y,'#ef3e55',true);
+}
+function loop(){update();draw();requestAnimationFrame(loop);}
+function end(){running=false;best=Math.max(best,score);localStorage.setItem('2dcar-best',best);bestEl.textContent=best;
+ overlay.innerHTML=`<div class="panel"><h2>RACE OVER</h2><p>Your score: <b>${score}</b><br>Best score: <b>${best}</b></p><button id="again">RACE AGAIN</button></div>`;overlay.style.display='grid';document.getElementById('again').onclick=start;}
+function start(){reset();running=true;overlay.style.display='none';}
+document.getElementById('start').onclick=start;
+function hold(id,which){let b=document.getElementById(id);b.addEventListener('pointerdown',e=>{e.preventDefault();if(which==='left')left=true;else right=true;});['pointerup','pointerleave','pointercancel'].forEach(ev=>b.addEventListener(ev,()=>{if(which==='left')left=false;else right=false;}));}
+hold('left','left');hold('right','right');
+addEventListener('keydown',e=>{if(['ArrowLeft','a','A'].includes(e.key)){left=true;e.preventDefault()}if(['ArrowRight','d','D'].includes(e.key)){right=true;e.preventDefault()}});
+addEventListener('keyup',e=>{if(['ArrowLeft','a','A'].includes(e.key))left=false;if(['ArrowRight','d','D'].includes(e.key))right=false;});
+loop();
+})();
+</script></body></html>
