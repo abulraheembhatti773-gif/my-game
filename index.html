@@ -1,87 +1,102 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>2D CAR — Highway Racer</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>2D CAR — 3D Highway Racer</title>
 <style>
-*{box-sizing:border-box}body{margin:0;background:#091321;color:#fff;font-family:system-ui,Arial;display:grid;place-items:center;min-height:100vh}
-main{width:min(960px,100vw);padding:12px}header{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:0 0 10px}
-h1{margin:0;font-size:clamp(22px,5vw,34px);letter-spacing:2px}small{color:#a9c0d8}
-.stats{display:flex;gap:14px;font-weight:700}.stat span{color:#55e6c1}
-.gamebox{position:relative;border:2px solid #344b65;border-radius:16px;overflow:hidden;box-shadow:0 16px 45px #0008;background:#162b3b}
+*{box-sizing:border-box}body{margin:0;background:#07111f;color:#fff;font-family:Arial,system-ui,sans-serif}
+main{width:min(1100px,100%);margin:auto;padding:12px}
+header{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:10px}
+h1{margin:0;font-size:clamp(24px,5vw,36px);letter-spacing:2px}small{color:#9eb5ca}
+.stats{display:flex;gap:16px;font-weight:800}.stats span{color:#62f0c4}
+.actions{display:flex;gap:8px;flex-wrap:wrap}
+button{border:0;border-radius:10px;padding:11px 16px;font-weight:800;cursor:pointer;background:#62f0c4;color:#06221d}
+button.secondary{background:#23384e;color:#fff;border:1px solid #49647f}
+#stage{position:relative;border:1px solid #405a76;border-radius:16px;overflow:hidden;background:linear-gradient(#7ac5e8,#d9edda 60%,#28613c);box-shadow:0 16px 45px #0009}
 canvas{display:block;width:100%;height:auto;aspect-ratio:16/9;touch-action:none}
-.overlay{position:absolute;inset:0;display:grid;place-items:center;background:#06111dcc;text-align:center;padding:20px}
-.panel{max-width:440px}.panel h2{font-size:clamp(30px,7vw,52px);margin:0 0 8px;color:#55e6c1}.panel p{color:#d5e3ef;line-height:1.5}
-button{border:0;border-radius:12px;padding:12px 22px;background:#55e6c1;color:#06221e;font-weight:900;font-size:16px;cursor:pointer}
-.controls{display:flex;justify-content:center;gap:18px;margin:12px auto 4px}
-.controls button{width:90px;height:54px;font-size:24px;background:#20364c;color:white;border:1px solid #49627c}
-.hint{text-align:center;color:#9db1c7;font-size:13px;margin-top:8px}
-@media(min-width:700px){.controls{display:none}}
-</style></head>
+#overlay{position:absolute;inset:0;background:#06111dcc;display:grid;place-items:center;text-align:center;padding:20px}
+.panel{max-width:480px}.panel h2{font-size:clamp(32px,7vw,56px);color:#62f0c4;margin:0 0 8px}.panel p{line-height:1.5;color:#d5e4ef}
+.controls{display:flex;justify-content:center;gap:20px;margin:12px auto}
+.controls button{width:100px;height:56px;background:#203850;color:white;border:1px solid #58718c;font-size:23px}
+.note{text-align:center;color:#9db1c7;font-size:13px;line-height:1.5}
+dialog{border:1px solid #526b83;border-radius:16px;background:#102136;color:white;max-width:min(440px,92vw);padding:24px}
+dialog::backdrop{background:#000b}dialog h2{margin-top:0;color:#62f0c4}
+a{color:#62f0c4}
+@media(min-width:720px){.controls{display:none}}
+</style>
+</head>
 <body><main>
-<header><div><h1>🏁 2D CAR</h1><small>HIGHWAY RACER</small></div><div class="stats"><div class="stat">SCORE<br><span id="score">0</span></div><div class="stat">BEST<br><span id="best">0</span></div></div></header>
-<div class="gamebox"><canvas id="c" width="960" height="540"></canvas>
-<div class="overlay" id="overlay"><div class="panel"><h2>2D CAR</h2><p>Dodge traffic, collect coins and beat your best score.<br>Use ← → or A / D to steer.</p><button id="start">START RACING</button></div></div></div>
+<header>
+ <div><h1>🏎️ 2D CAR</h1><small>3D HIGHWAY RACER • WEB EDITION</small></div>
+ <div class="stats"><div>SCORE<br><span id="score">0</span></div><div>BEST<br><span id="best">0</span></div></div>
+ <div class="actions"><button class="secondary" id="donate">♥ Donate</button><button id="restart">Restart</button></div>
+</header>
+<div id="stage"><canvas id="game" width="960" height="540"></canvas>
+<div id="overlay"><div class="panel"><h2>2D CAR</h2><p>A 3D-style highway racing game. Dodge traffic, collect coins and beat your high score.</p><button id="start">START GAME</button></div></div>
+</div>
 <div class="controls"><button id="left">◀</button><button id="right">▶</button></div>
-<div class="hint">Desktop: Arrow keys / A-D &nbsp; • &nbsp; Mobile: use the steering buttons</div>
+<p class="note">Controls: ← → or A / D on keyboard • Touch buttons on mobile<br>Donation button is a placeholder until you add your own verified payment link.</p>
 </main>
+<dialog id="donation"><h2>Support 2D CAR ♥</h2><p>Thank you for supporting this game! To receive donations, the developer must add their own payment link (for example, a verified Ko-fi, Buy Me a Coffee, or payment page).</p><p><b>Setup:</b> Open this HTML file in a text editor and replace <code>PASTE_YOUR_DONATION_URL_HERE</code> in the script with your real donation URL.</p><button id="closeDonate">Close</button></dialog>
 <script>
 (()=>{
-const c=document.getElementById('c'),x=c.getContext('2d'),W=960,H=540;
-const scoreEl=document.getElementById('score'),bestEl=document.getElementById('best'),overlay=document.getElementById('overlay');
-let running=false,score=0,best=+(localStorage.getItem('2dcar-best')||0),frame=0,speed=5,roadShift=0,traffic=[],coins=[],left=false,right=false;
-bestEl.textContent=best;
-const player={x:480,y:420,w:54,h:88};
-const lanes=[365,480,595];
-function reset(){score=0;frame=0;speed=5;roadShift=0;traffic=[];coins=[];player.x=480;scoreEl.textContent=0;}
-function rounded(a,b,w,h,r,col){x.fillStyle=col;x.beginPath();x.roundRect(a,b,w,h,r);x.fill();}
-function car(px,py,color,playerCar=false){
- rounded(px-25,py-39,50,78,12,'#101820');rounded(px-27,py-42,54,84,12,color);
- rounded(px-18,py-22,36,26,6,'#a9e7f4');rounded(px-18,py+10,36,18,5,'#243d50');
- x.fillStyle='#fff3bf';x.fillRect(px-21,py-39,9,5);x.fillRect(px+12,py-39,9,5);
- x.fillStyle='#ff4545';x.fillRect(px-21,py+34,9,5);x.fillRect(px+12,py+34,9,5);
- if(playerCar){x.fillStyle='#d7f7ff';x.fillRect(px-4,py-39,8,4);}
+const canvas=document.getElementById('game'),ctx=canvas.getContext('2d'),W=960,H=540;
+const $=id=>document.getElementById(id);
+let running=false,score=0,best=Number(localStorage.getItem('2dcar-best')||0),frame=0,roadOffset=0,speed=6,left=false,right=false,traffic=[],coins=[];
+const player={x:480,y:455};
+$('best').textContent=best;
+const donationUrl='PASTE_YOUR_DONATION_URL_HERE';
+$('donate').onclick=()=>{if(donationUrl.startsWith('https://')&&!donationUrl.includes('PASTE_'))window.open(donationUrl,'_blank','noopener');else $('donation').showModal()};
+$('closeDonate').onclick=()=>$('donation').close();
+function reset(){score=0;frame=0;roadOffset=0;speed=6;traffic=[];coins=[];player.x=480;$('score').textContent=0;}
+function rounded(x,y,w,h,r,color){ctx.fillStyle=color;ctx.beginPath();ctx.roundRect(x,y,w,h,r);ctx.fill();}
+function drawTree(x,y,s){ctx.fillStyle='#5a3827';ctx.fillRect(x-4*s,y,8*s,22*s);ctx.fillStyle='#145b39';ctx.beginPath();ctx.arc(x,y-8*s,19*s,0,Math.PI*2);ctx.fill();ctx.fillStyle='#23804c';ctx.beginPath();ctx.arc(x-6*s,y-13*s,12*s,0,Math.PI*2);ctx.fill();}
+function drawRoad(){
+ const horizon=105;
+ let sky=ctx.createLinearGradient(0,0,0,horizon);sky.addColorStop(0,'#5bb7e5');sky.addColorStop(1,'#d6f0ef');ctx.fillStyle=sky;ctx.fillRect(0,0,W,H);
+ // distant hills and landscape
+ ctx.fillStyle='#79ad78';ctx.beginPath();ctx.moveTo(0,150);ctx.quadraticCurveTo(160,80,320,150);ctx.quadraticCurveTo(500,85,680,150);ctx.quadraticCurveTo(820,75,960,145);ctx.lineTo(960,540);ctx.lineTo(0,540);ctx.fill();
+ // perspective road trapezoid
+ ctx.fillStyle='#343a45';ctx.beginPath();ctx.moveTo(438,105);ctx.lineTo(522,105);ctx.lineTo(900,540);ctx.lineTo(60,540);ctx.closePath();ctx.fill();
+ // shoulders
+ ctx.strokeStyle='#f8f0c4';ctx.lineWidth=7;ctx.beginPath();ctx.moveTo(435,105);ctx.lineTo(55,540);ctx.moveTo(525,105);ctx.lineTo(905,540);ctx.stroke();
+ // lane dashes in perspective
+ for(let i=0;i<10;i++){let t=((i/10)+(roadOffset/700))%1;let y=105+t*t*435;let half=42+t*378;let dashH=5+t*23;let dashW=2+t*5;ctx.fillStyle='#f4e9c5';ctx.fillRect(480-half/3-dashW/2,y,dashW,dashH);ctx.fillRect(480+half/3-dashW/2,y,dashW,dashH);}
+ // trees along road edges
+ for(let i=0;i<9;i++){let t=((i/9)+(roadOffset/900))%1;let y=105+t*t*450;let s=.25+t*.85;let edge=42+t*390;drawTree(480-edge-25*s,y,s);drawTree(480+edge+25*s,y,s);}
+ roadOffset+=speed;
 }
-function road(){
- x.fillStyle='#17452f';x.fillRect(0,0,W,H);
- // roadside trees
- for(let y=-40+(roadShift%110);y<H;y+=110){for(let xx of [110,180,780,850]){
- x.fillStyle='#0c3024';x.beginPath();x.arc(xx,y,24,0,7);x.fill();x.fillStyle='#28794c';x.beginPath();x.arc(xx-4,y-5,17,0,7);x.fill();}}
- x.fillStyle='#343b46';x.fillRect(280,0,400,H);
- x.fillStyle='#e7d58a';x.fillRect(278,0,5,H);x.fillRect(677,0,5,H);
- x.strokeStyle='#f5f2dc';x.lineWidth=5;x.setLineDash([38,34]);x.lineDashOffset=-roadShift;
- x.beginPath();x.moveTo(413,0);x.lineTo(413,H);x.moveTo(547,0);x.lineTo(547,H);x.stroke();x.setLineDash([]);
- roadShift+=speed;
+function drawCar(px,py,color,scale=1){
+ ctx.save();ctx.translate(px,py);ctx.scale(scale,scale);
+ // shadow and wheels
+ ctx.fillStyle='#10182088';ctx.beginPath();ctx.ellipse(4,8,32,48,0,0,Math.PI*2);ctx.fill();
+ rounded(-29,-36,13,27,5,'#111820');rounded(16,-36,13,27,5,'#111820');rounded(-29,12,13,27,5,'#111820');rounded(16,12,13,27,5,'#111820');
+ rounded(-24,-48,48,96,13,color);
+ rounded(-17,-29,34,29,7,'#a8e7f2');rounded(-17,10,34,22,5,'#243f54');
+ ctx.fillStyle='#fff1bb';ctx.fillRect(-19,-45,10,5);ctx.fillRect(9,-45,10,5);
+ ctx.fillStyle='#ff4e54';ctx.fillRect(-19,39,10,5);ctx.fillRect(9,39,10,5);
+ ctx.restore();
 }
-function spawn(){
- if(frame%62===0){let lane=lanes[Math.floor(Math.random()*3)];traffic.push({x:lane,y:-70,color:['#ff5964','#ffc857','#8b7bff','#45c4e8'][Math.floor(Math.random()*4)]});}
- if(frame%95===0){let lane=lanes[Math.floor(Math.random()*3)];coins.push({x:lane,y:-25});}
+function projectY(y){return y;}
+function spawn(){if(frame%58===0){let lane=[-0.55,0,0.55][Math.floor(Math.random()*3)];traffic.push({lane,y:0,color:['#ff5964','#ffc857','#8b7bff','#45c4e8'][Math.floor(Math.random()*4)]});}if(frame%90===0)coins.push({lane:[-.55,0,.55][Math.floor(Math.random()*3)],y:0});}
+function roadX(lane,y){let t=Math.max(0,Math.min(1,(y-105)/435));return 480+lane*(42+t*378);}
+function update(){if(!running)return;frame++;speed=Math.min(10,6+score/650);if(left)player.x-=7;if(right)player.x+=7;player.x=Math.max(230,Math.min(730,player.x));spawn();traffic.forEach(o=>o.y+=speed*1.3);coins.forEach(o=>o.y+=speed*1.3);traffic=traffic.filter(o=>o.y<600);coins=coins.filter(o=>o.y<580);
+ for(const o of traffic){let yy=105+o.y;let xx=roadX(o.lane,yy);let sc=.28+o.y/430*.8;if(Math.abs(xx-player.x)<38*sc+22&&Math.abs(yy-455)<65*sc+35){end();return;}}
+ coins=coins.filter(o=>{let yy=105+o.y,xx=roadX(o.lane,yy),sc=.3+o.y/430*.7;if(Math.abs(xx-player.x)<34&&Math.abs(yy-455)<40){score+=25;return false;}return true;});
+ if(frame%8===0)score++;$('score').textContent=score;
 }
-function update(){
- if(!running)return;frame++;speed=Math.min(9,5+score/500);
- if(left)player.x-=6;if(right)player.x+=6;player.x=Math.max(330,Math.min(630,player.x));
- spawn();
- traffic.forEach(t=>t.y+=speed+1.2);coins.forEach(o=>o.y+=speed);
- traffic=traffic.filter(t=>t.y<H+100);coins=coins.filter(o=>o.y<H+30);
- for(const t of traffic){if(Math.abs(t.x-player.x)<47&&Math.abs(t.y-player.y)<68){end();return;}}
- coins=coins.filter(o=>{if(Math.abs(o.x-player.x)<38&&Math.abs(o.y-player.y)<55){score+=25;return false;}return true;});
- if(frame%8===0)score+=1;scoreEl.textContent=score;
+function draw(){drawRoad();for(const o of coins){let y=105+o.y,x=roadX(o.lane,y),s=.35+o.y/430*.8;ctx.save();ctx.shadowColor='#ffe15a';ctx.shadowBlur=20;ctx.fillStyle='#ffd83d';ctx.beginPath();ctx.arc(x,y,10*s+3,0,7);ctx.fill();ctx.restore();}
+ for(const o of traffic){let y=105+o.y,x=roadX(o.lane,y),s=.28+o.y/430*.8;drawCar(x,y,o.color,s);}
+ drawCar(player.x,455,'#ef3e55',.95);
 }
-function draw(){
- road();
- // coins
- for(const o of coins){x.fillStyle='#ffdb4d';x.shadowColor='#ffdb4d';x.shadowBlur=16;x.beginPath();x.arc(o.x,o.y,13,0,7);x.fill();x.shadowBlur=0;x.fillStyle='#805400';x.font='bold 15px Arial';x.textAlign='center';x.fillText('$',o.x,o.y+5);}
- traffic.forEach(t=>car(t.x,t.y,t.color));car(player.x,player.y,'#ef3e55',true);
-}
-function loop(){update();draw();requestAnimationFrame(loop);}
-function end(){running=false;best=Math.max(best,score);localStorage.setItem('2dcar-best',best);bestEl.textContent=best;
- overlay.innerHTML=`<div class="panel"><h2>RACE OVER</h2><p>Your score: <b>${score}</b><br>Best score: <b>${best}</b></p><button id="again">RACE AGAIN</button></div>`;overlay.style.display='grid';document.getElementById('again').onclick=start;}
-function start(){reset();running=true;overlay.style.display='none';}
-document.getElementById('start').onclick=start;
-function hold(id,which){let b=document.getElementById(id);b.addEventListener('pointerdown',e=>{e.preventDefault();if(which==='left')left=true;else right=true;});['pointerup','pointerleave','pointercancel'].forEach(ev=>b.addEventListener(ev,()=>{if(which==='left')left=false;else right=false;}));}
-hold('left','left');hold('right','right');
+function end(){running=false;best=Math.max(best,score);localStorage.setItem('2dcar-best',best);$('best').textContent=best;$('overlay').innerHTML=`<div class="panel"><h2>RACE OVER</h2><p>Score: <b>${score}</b><br>Best: <b>${best}</b></p><button id="again">RACE AGAIN</button></div>`;$('overlay').style.display='grid';$('again').onclick=start;}
+function start(){reset();running=true;$('overlay').style.display='none';}
+$('start').onclick=start;$('restart').onclick=start;
+function bind(id,which){const b=$(id);b.addEventListener('pointerdown',e=>{e.preventDefault();if(which==='l')left=true;else right=true;});['pointerup','pointerleave','pointercancel'].forEach(ev=>b.addEventListener(ev,()=>{if(which==='l')left=false;else right=false;}));}
+bind('left','l');bind('right','r');
 addEventListener('keydown',e=>{if(['ArrowLeft','a','A'].includes(e.key)){left=true;e.preventDefault()}if(['ArrowRight','d','D'].includes(e.key)){right=true;e.preventDefault()}});
 addEventListener('keyup',e=>{if(['ArrowLeft','a','A'].includes(e.key))left=false;if(['ArrowRight','d','D'].includes(e.key))right=false;});
-loop();
+function loop(){update();draw();requestAnimationFrame(loop);}loop();
 })();
 </script></body></html>
